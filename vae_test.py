@@ -1,10 +1,11 @@
-
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 from scipy.io import loadmat
 
-import tracktrain
+#import tracktrain
+from preprocess import preprocess,gaussnorm,random_permutation
+from krttdkit.visualize import guitools as gt
 
 plt.rcParams.update({'font.size':16, })
 
@@ -98,33 +99,27 @@ def ints_to_masks(class_ints):
     return int_labels,np.stack([class_ints==l for l in int_labels], axis=-1)
 
 if __name__=="__main__":
-    wl_min,wl_max = (.4, 2.5) ## define wavelength range
     ## (M,N,F) array for F bands
     X = loadmat("./data/indian-pines.mat")["indian_pines"]
     ## (M,F) array of integer classes
     Y = loadmat("./data/indian-pines-truth.mat")["indian_pines_gt"]
     ## Construct a coordinate array of equally-spaced wavelengths
+    wl_min,wl_max = (.4, 2.5) ## define wavelength range
     wls = np.linspace(.4,2.5,X.shape[-1])
 
-    ## Collapse the spatial dimension
-    X = np.reshape(X, (X.shape[0]*X.shape[1], X.shape[-1]))
-    Y = np.reshape(Y, Y.shape[0]*Y.shape[1])
+    gt.quick_render(np.dstack([X[...,b] for b in (88,54,24)]))
 
-    ## Shuffle the pixel dimension
-    ridx = np.arange(X.shape[0])
-    rng.shuffle(ridx)
-    X,Y = X[ridx],Y[ridx]
+    exit(0)
 
-    ## Normalize the array
-    means = np.average(X, axis=0)
-    stdevs = np.std(X, axis=0)
-    X = (X-means)/stdevs
+    X,Y = preprocess(X, Y, gain=500, offset=1000, cast_to_onehot=False)
+    Xnorm,means,stdevs = gaussnorm(X)
 
     ## Plot
-    #fig,ax = plot_sample(wls, means, err=stdevs, show=False)
+    fig,ax = plot_sample(wls, means, err=stdevs, show=False)
 
     int_labels,masks = ints_to_masks(Y)
-    classes = [X[masks[...,i]] for i in range(masks.shape[-1])]
+
+    classes = [Xnorm[masks[...,i]] for i in range(masks.shape[-1])]
     class_means,class_stdevs = map(np.asarray, zip(*[
             (np.average(c, axis=0), np.std(c, axis=0))
             for c in classes
@@ -132,18 +127,12 @@ if __name__=="__main__":
 
     plot_classes(wls,class_means,class_stdevs,show=True)
 
-    exit(0)
-
     for i in range(10):
         plot_sample(
                 wavelengths=wls,
-                intensities=X[i],
+                intensities=Xnorm[i],
                 show=True,
                 plot_spec={
                     "fill_alpha":.2,
                     },
                 )
-
-    print(np.min(X), np.mean(X), np.max(X))
-    print(np.min(Y), np.mean(Y), np.max(Y))
-
