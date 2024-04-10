@@ -30,6 +30,15 @@ def gaussnorm(X):
     Xnorm = (X-means)/stdevs
     return Xnorm,means,stdevs
 
+def ints_to_masks(class_ints):
+    """
+    Convert a (M,N) shaped array of L unique class identifiers to a
+    (M,N,L) shaped boolean array and a list of the corresponding labels.
+    """
+    int_labels = np.unique(class_ints)
+    masks = np.stack([class_ints==l for l in int_labels], axis=-1)
+    return int_labels,masks
+
 if __name__=="__main__":
     ## (M,N,F) array for F bands
     X = loadmat("./data/indian-pines.mat")["indian_pines"]
@@ -45,5 +54,3 @@ if __name__=="__main__":
 
     ## Get integer arrays encoding a seeded random permutation and its inverse
     forward,backward = random_permutation(X.shape[0])
-
-
