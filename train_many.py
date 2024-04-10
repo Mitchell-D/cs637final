@@ -1,9 +1,11 @@
 import numpy as np
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+import traceback
+##os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 from pathlib import Path
 from scipy.io import loadmat
+from pprint import pprint
 
 import tracktrain.model_methods as mm
 from tracktrain.VariationalEncoderDecoder import VariationalEncoderDecoder
@@ -14,7 +16,8 @@ from preprocess import preprocess,gaussnorm,random_permutation,ints_to_masks
 
 base_config = {
         ## Meta-info
-        "model_type":"ff",
+        "model_type":"ved",
+        #"model_type":"ff",
         "rand_seed":20000722,
 
         ## Exclusive to feedforward
@@ -35,24 +38,24 @@ base_config = {
         ## Exclusive to compile_and_build_dir
         #"learning_rate":1e-5,
         "loss":"categorical_crossentropy",
-        "metrics":["mse", "mae"],
-        "weighted_metrics":["mse", "mae"],
+        "metrics":["categorical_crossentropy", "mae"],
+        "weighted_metrics":[],
         "softmax_out":True,
 
         ## Exclusive to train
-        "early_stop_metric":"val_mse", ## metric evaluated for stagnation
+        "early_stop_metric":"val_loss", ## metric evaluated for stagnation
         "early_stop_patience":64, ## number of epochs before stopping
         "save_weights_only":True,
-        "batch_size":16,
+        "batch_size":32,
         "batch_buffer":1,
-        "max_epochs":2048, ## maximum number of epochs to train
+        "max_epochs":512, ## maximum number of epochs to train
         "val_frequency":1, ## epochs between validation
 
         ## Exclusive to generator init
         #"train_val_ratio":.9,
         #"mask_pct":0.0,
         #"mask_pct_stdev":0.0,
-        "mask_val":9999,
+        "mask_val":999.,
         "mask_feat_probs":None,
 
         "notes":"",
@@ -78,7 +81,7 @@ variations = {
         "dense_kwargs":(
             {"activation":"relu"},
             {"activation":"sigmoid"},
-            {"activation":"tanh"},
+            #{"activation":"tanh"},
             ),
 
         ## VED only
@@ -95,17 +98,17 @@ variations = {
         "enc_dense_kwargs":(
             {"activation":"relu"},
             {"activation":"sigmoid"},
-            {"activation":"tanh"},
+            #{"activation":"tanh"},
             ),
         "dec_dense_kwargs":(
             {"activation":"relu"},
             {"activation":"sigmoid"},
-            {"activation":"tanh"},
+            #{"activation":"tanh"},
             ),
         }
 
-num_samples = 1
-model_base_name = "ff"
+num_samples = 64
+model_base_name = "ved"
 
 if __name__=="__main__":
     model_parent_dir = Path("data/models")
@@ -155,6 +158,7 @@ if __name__=="__main__":
         cur_update["model_name"] = model_base_name+f"-{i:03}"
         ## Construct the config for this model training run
         cur_config = {**base_config, **cur_update}
+        pprint(cur_config)
         try:
             ## Initialize the masking data generators
             gen_train,gen_val = mm.array_to_noisy_tv_gen(
@@ -177,7 +181,7 @@ if __name__=="__main__":
                     )
 
             ## train the model and add the results to its directory
-            train(
+            best_model = train(
                 model_dir_path=md.dir,
                 train_config=cur_config,
                 compiled_model=model,
@@ -185,8 +189,7 @@ if __name__=="__main__":
                 gen_validation=gen_val,
                 )
         except Exception as e:
-            raise e
             print(f"FAILED update combination {cur_update}")
-            print(e)
+            print(traceback.format_exc())
             comb_failed.append(cur_comb)
         comb_trained.append(cur_comb)
