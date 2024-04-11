@@ -1,0 +1,58 @@
+{
+    "model_type": "ff",
+    "rand_seed": 20000722,
+    "batchnorm": true,
+    "loss": "categorical_crossentropy",
+    "metrics": [
+        "categorical_crossentropy",
+        "mae"
+    ],
+    "weighted_metrics": [],
+    "softmax_out": true,
+    "early_stop_metric": "val_loss",
+    "early_stop_patience": 64,
+    "save_weights_only": true,
+    "batch_size": 32,
+    "batch_buffer": 1,
+    "max_epochs": 512,
+    "val_frequency": 1,
+    "mask_val": 999.0,
+    "mask_feat_probs": null,
+    "notes": "",
+    "num_inputs": 220,
+    "num_outputs": 17,
+    "dropout_rate": 0.2,
+    "learning_rate": 1e-06,
+    "train_val_ratio": 0.9,
+    "mask_pct": 0.3,
+    "mask_pct_stdev": 0,
+    "node_list": [
+        128,
+        64,
+        32,
+        16
+    ],
+    "dense_kwargs": {
+        "activation": "tanh"
+    },
+    "num_latent": 3,
+    "enc_node_list": [
+        128,
+        64,
+        64,
+        32,
+        32,
+        32,
+        16
+    ],
+    "dec_node_list": [
+        17
+    ],
+    "enc_dense_kwargs": {
+        "activation": "tanh"
+    },
+    "dec_dense_kwargs": {
+        "activation": "sigmoid"
+    },
+    "model_name": "ff-061"
+}

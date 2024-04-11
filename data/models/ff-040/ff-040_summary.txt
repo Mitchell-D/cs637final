@@ -1,0 +1,41 @@
+Model: "model_40"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ input (InputLayer)          [(None, 220)]             0         
+                                                                 
+ ff-040_dense_0 (Dense)      (None, 128)               28288     
+                                                                 
+ ff-040_bnorm_0 (BatchNorma  (None, 128)               512       
+ lization)                                                       
+                                                                 
+ dropout_118 (Dropout)       (None, 128)               0         
+                                                                 
+ ff-040_dense_1 (Dense)      (None, 64)                8256      
+                                                                 
+ ff-040_bnorm_1 (BatchNorma  (None, 64)                256       
+ lization)                                                       
+                                                                 
+ dropout_119 (Dropout)       (None, 64)                0         
+                                                                 
+ ff-040_dense_2 (Dense)      (None, 32)                2080      
+                                                                 
+ ff-040_bnorm_2 (BatchNorma  (None, 32)                128       
+ lization)                                                       
+                                                                 
+ dropout_120 (Dropout)       (None, 32)                0         
+                                                                 
+ ff-040_dense_3 (Dense)      (None, 16)                528       
+                                                                 
+ ff-040_bnorm_3 (BatchNorma  (None, 16)                64        
+ lization)                                                       
+                                                                 
+ dropout_121 (Dropout)       (None, 16)                0         
+                                                                 
+ output (Dense)              (None, 17)                289       
+                                                                 
+=================================================================
+Total params: 40401 (157.82 KB)
+Trainable params: 39921 (155.94 KB)
+Non-trainable params: 480 (1.88 KB)
+_________________________________________________________________

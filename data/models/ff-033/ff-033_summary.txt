@@ -1,0 +1,34 @@
+Model: "model_33"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ input (InputLayer)          [(None, 220)]             0         
+                                                                 
+ ff-033_dense_0 (Dense)      (None, 128)               28288     
+                                                                 
+ ff-033_bnorm_0 (BatchNorma  (None, 128)               512       
+ lization)                                                       
+                                                                 
+ dropout_92 (Dropout)        (None, 128)               0         
+                                                                 
+ ff-033_dense_1 (Dense)      (None, 64)                8256      
+                                                                 
+ ff-033_bnorm_1 (BatchNorma  (None, 64)                256       
+ lization)                                                       
+                                                                 
+ dropout_93 (Dropout)        (None, 64)                0         
+                                                                 
+ ff-033_dense_2 (Dense)      (None, 32)                2080      
+                                                                 
+ ff-033_bnorm_2 (BatchNorma  (None, 32)                128       
+ lization)                                                       
+                                                                 
+ dropout_94 (Dropout)        (None, 32)                0         
+                                                                 
+ output (Dense)              (None, 17)                561       
+                                                                 
+=================================================================
+Total params: 40081 (156.57 KB)
+Trainable params: 39633 (154.82 KB)
+Non-trainable params: 448 (1.75 KB)
+_________________________________________________________________
