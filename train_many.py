@@ -62,6 +62,9 @@ base_config = {
         }
 
 variations = {
+        ## if True, values are normalized over all features to preserve
+        ## spectral angles rather than independently.
+        "bulk_norm":(True, False),
         "dropout_rate":(0.0,0.1,0.2,0.4),
         "learning_rate":(1e-6,1e-4,1e-2),
         "train_val_ratio":(.6,.8,.9),
@@ -125,7 +128,10 @@ if __name__=="__main__":
     grid_shape = X.shape[:2]
     X,Y = preprocess(X, Y, gain=500, offset=1000, cast_to_onehot=True)
     IDX = np.arange(X.shape[0])
-    X_norm,means,stdevs = gaussnorm(X)
+    X,means,stdevs = gaussnorm(X_nonorm:=X)
+
+    print(X_nonorm, X)
+    exit(0)
 
     ## Get integer arrays encoding a seeded random permutation and its inverse
     forward,backward = random_permutation(
