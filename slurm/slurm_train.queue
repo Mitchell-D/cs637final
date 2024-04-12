@@ -22,12 +22,12 @@
 ###SBATCH -p shared --gres=gpu:rtx5000:1
 #SBATCH -p shared --gres=gpu:1
 
-#SBATCH -J aviris_ved
-#SBATCH -o /rhome/mdodson/cs637final/slurm/out/slurm_train-ved.out ## STDOUT
-#SBATCH -e /rhome/mdodson/cs637final/slurm/out/slurm_train-ved.err ## STDERR
-###SBATCH -J aviris_ff
-###SBATCH -o /rhome/mdodson/cs637final/slurm/out/slurm_train-ff.out ## STDOUT
-###SBATCH -e /rhome/mdodson/cs637final/slurm/out/slurm_train-ff.err ## STDERR
+###SBATCH -J aviris_ved_bn
+###SBATCH -o /rhome/mdodson/cs637final/slurm/out/slurm_train-ved-bn.out ## STDOUT
+###SBATCH -e /rhome/mdodson/cs637final/slurm/out/slurm_train-ved-bn.err ## STDERR
+#SBATCH -J aviris_ff_bn
+#SBATCH -o /rhome/mdodson/cs637final/slurm/out/slurm_train-ff.out ## STDOUT
+#SBATCH -e /rhome/mdodson/cs637final/slurm/out/slurm_train-ff.err ## STDERR
 
 module load cuda
 $CUDA_PATH/samples/bin/x86_64/linux/release/deviceQuery

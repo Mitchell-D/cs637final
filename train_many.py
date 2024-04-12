@@ -16,9 +16,9 @@ from preprocess import preprocess,gaussnorm,random_permutation,ints_to_masks
 
 base_config = {
         ## Meta-info
-        "model_type":"ved",
-        #"model_type":"ff",
-        "rand_seed":20000722,
+        #"model_type":"ved",
+        "model_type":"ff",
+        "rand_seed":20000720,
 
         ## Exclusive to feedforward
         #"node_list":[64,64,32,32,16],
@@ -34,6 +34,7 @@ base_config = {
         ## Common to models
         "batchnorm":True,
         #"dropout_rate":0.0,
+
 
         ## Exclusive to compile_and_build_dir
         #"learning_rate":1e-5,
@@ -57,14 +58,14 @@ base_config = {
         #"mask_pct_stdev":0.0,
         "mask_val":999.,
         "mask_feat_probs":None,
+        ## if True, values are normalized over all features to preserve
+        ## spectral angles rather than independently.
+        "bulk_norm":True,
 
         "notes":"",
         }
 
 variations = {
-        ## if True, values are normalized over all features to preserve
-        ## spectral angles rather than independently.
-        "bulk_norm":(True, False),
         "dropout_rate":(0.0,0.1,0.2,0.4),
         "learning_rate":(1e-6,1e-4,1e-2),
         "train_val_ratio":(.6,.8,.9),
@@ -111,7 +112,8 @@ variations = {
         }
 
 num_samples = 64
-model_base_name = "ved"
+offset = 64 ## Model numbering offset accounting for already-trained models
+model_base_name = base_config.get("model_type") #"ff"
 
 if __name__=="__main__":
     model_parent_dir = Path("data/models")
@@ -128,10 +130,10 @@ if __name__=="__main__":
     grid_shape = X.shape[:2]
     X,Y = preprocess(X, Y, gain=500, offset=1000, cast_to_onehot=True)
     IDX = np.arange(X.shape[0])
-    X,means,stdevs = gaussnorm(X_nonorm:=X)
-
-    print(X_nonorm, X)
-    exit(0)
+    X,means,stdevs = gaussnorm(
+            X=(X_nonorm:=X),
+            bulk_norm=base_config.get("bulk_norm"),
+            )
 
     ## Get integer arrays encoding a seeded random permutation and its inverse
     forward,backward = random_permutation(
@@ -161,7 +163,7 @@ if __name__=="__main__":
                 vlabels[i]:vdata[i][cur_comb[i]]
                 for i in range(len(vlabels))
                 }
-        cur_update["model_name"] = model_base_name+f"-{i:03}"
+        cur_update["model_name"] = model_base_name+f"-{i+offset:03}"
         ## Construct the config for this model training run
         cur_config = {**base_config, **cur_update}
         pprint(cur_config)
@@ -185,7 +187,6 @@ if __name__=="__main__":
                     model_parent_dir=model_parent_dir,
                     print_summary=False,
                     )
-
             ## train the model and add the results to its directory
             best_model = train(
                 model_dir_path=md.dir,

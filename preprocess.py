@@ -23,10 +23,18 @@ def random_permutation(size, seed=None):
     backward = list(zip(*sorted(enumerate(forward), key=lambda s:s[1])))[0]
     return forward,np.asarray(backward)
 
-def gaussnorm(X):
-    """ Normalize the array to a unit gaussian distribution """
-    means = np.average(X, axis=0)
-    stdevs = np.std(X, axis=0)
+def gaussnorm(X, bulk_norm=False):
+    """
+    Normalize the array to a unit gaussian distribution, by default per feature
+    on the final axis, but optionally normalized over the whole array
+
+    :@param X: Array to normalize
+    :@param bulk_norm: If True, normalizes using the full array's mean and
+        standard deviation rather than per final axis element.
+    """
+    ax = [0,None][bulk_norm]
+    means = np.average(X, axis=ax)
+    stdevs = np.std(X, axis=ax)
     Xnorm = (X-means)/stdevs
     return Xnorm,means,stdevs
 
