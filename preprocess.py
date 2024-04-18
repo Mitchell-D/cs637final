@@ -23,6 +23,37 @@ def random_permutation(size, seed=None):
     backward = list(zip(*sorted(enumerate(forward), key=lambda s:s[1])))[0]
     return forward,np.asarray(backward)
 
+def ratio_sample(label_ints:np.array, ratio, seed=None):
+    """
+    Given an array of integers identifying class labels, return a boolean
+    mask identifying samples randomly chosen to fit the constraints.
+
+    :@param label_ints: 1D numpy array of integer labels
+    :@param ratio: Percentage of each class to return
+    :@param seed: random seed to apply when selecting valid members
+
+    :@return: Boolean mask identifying samples to include
+    """
+    unique_labels,counts = np.unique(label_ints, return_counts=True)
+    forward,backward = random_permutation(label_ints.size, seed=seed)
+    ## reversibly shuffle the labels
+    labels_ints = label_ints[forward]
+    ratio_counts = np.floor(ratio*counts)
+    for i,l in enumerate(unique_labels):
+        np.where(label_ints==l)[:i]
+
+
+def uniform_sample(label_ints:np.array, nsamples=None, seed=None):
+    """
+    Given an array of integers identifying class labels, return
+
+    :@param label_ints: Numpy array of integer labels
+    :@param nsamples: Maximum number of samples to draw from each category.
+        If any classes have fewer samples available than the provided amount,
+        the included mask will include all of them.
+    """
+    pass
+
 def gaussnorm(X, bulk_norm=False):
     """
     Normalize the array to a unit gaussian distribution, by default per feature

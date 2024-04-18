@@ -12,13 +12,16 @@ from tracktrain.VariationalEncoderDecoder import VariationalEncoderDecoder
 from tracktrain.ModelDir import ModelDir
 from tracktrain.compile_and_train import train
 
-from preprocess import preprocess,gaussnorm,random_permutation,ints_to_masks
+import preprocess as pp # preprocess,gaussnorm,random_permutation,ints_to_masks
 
 base_config = {
         ## Meta-info
         #"model_type":"ved",
         "model_type":"ff",
         "rand_seed":20000720,
+
+        ## sampling
+        "drop_unknown":True,
 
         ## Exclusive to feedforward
         #"node_list":[64,64,32,32,16],
@@ -60,7 +63,7 @@ base_config = {
         "mask_feat_probs":None,
         ## if True, values are normalized over all features to preserve
         ## spectral angles rather than independently.
-        "bulk_norm":True,
+        "bulk_norm":False,
 
         "notes":"",
         }
@@ -111,9 +114,9 @@ variations = {
             ),
         }
 
-num_samples = 64
+num_samples = 16
 offset = 64 ## Model numbering offset accounting for already-trained models
-model_base_name = base_config.get("model_type") #"ff"
+model_base_name = base_config.get("model_type")+"-nounk" #"ff"
 
 if __name__=="__main__":
     model_parent_dir = Path("data/models")
@@ -122,21 +125,29 @@ if __name__=="__main__":
     ## (M,F) array of integer classes
     Y = loadmat("./data/indian-pines-truth.mat")["indian_pines_gt"]
 
+    if base_config.get("drop_unknown"):
+        not_unknown = (Y != 0)
+        Y = Y[not_unknown]
+        X = X[not_unknown]
+
+    pp.ratio_sample(Y, .6)
+    exit(0)
+
     ## Construct a coordinate array of equally-spaced wavelengths
     wl_min,wl_max = (.4, 2.5) ## define wavelength range
     wls = np.linspace(.4,2.5,X.shape[-1])
 
     ## Reshape and rescale the feature data, and one-hot encode the labels
     grid_shape = X.shape[:2]
-    X,Y = preprocess(X, Y, gain=500, offset=1000, cast_to_onehot=True)
+    X,Y = pp.preprocess(X, Y, gain=500, offset=1000, cast_to_onehot=True)
     IDX = np.arange(X.shape[0])
-    X,means,stdevs = gaussnorm(
+    X,means,stdevs = pp.gaussnorm(
             X=(X_nonorm:=X),
             bulk_norm=base_config.get("bulk_norm"),
             )
 
     ## Get integer arrays encoding a seeded random permutation and its inverse
-    forward,backward = random_permutation(
+    forward,backward = pp.random_permutation(
             X.shape[0], seed=base_config.get("rand_seed"))
     X,Y,IDX = X[forward],Y[forward],IDX[forward]
 
