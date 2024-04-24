@@ -34,14 +34,15 @@ def ratio_sample(label_ints:np.array, ratio, seed=None):
 
     :@return: Boolean mask identifying samples to include
     """
+    assert len(label_ints.shape)==1, "label_ints must be a 1D array"
     unique_labels,counts = np.unique(label_ints, return_counts=True)
     forward,backward = random_permutation(label_ints.size, seed=seed)
     ## reversibly shuffle the labels
     labels_ints = label_ints[forward]
-    ratio_counts = np.floor(ratio*counts)
+    ratio_counts = np.floor(ratio*counts).astype(int)
+    masks = np.full((len(unique_labels), label_ints.size))
     for i,l in enumerate(unique_labels):
-        np.where(label_ints==l)[:i]
-
+        np.where(label_ints==l)[0][:ratio_counts[i]]
 
 def uniform_sample(label_ints:np.array, nsamples=None, seed=None):
     """
