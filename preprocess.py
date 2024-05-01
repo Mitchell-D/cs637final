@@ -1,20 +1,6 @@
 import numpy as np
 from scipy.io import loadmat
 
-def preprocess(X:np.array, Y:np.array, seed=None, gain=500, offset=1000,
-               cast_to_onehot=True):
-    """
-    """
-    ## Collapse the spatial dimension
-    X = np.reshape(X, (X.shape[0]*X.shape[1], X.shape[-1]))
-    Y = np.reshape(Y, Y.shape[0]*Y.shape[1])
-    ## Scale to W cm^-2 nm^-1 sr^-1
-    X = (X-offset)/gain
-    ## One-hot encode the true vectors
-    if cast_to_onehot:
-        Y = np.stack([np.where(Y==s, 1, 0) for s in np.unique(Y)], axis=-1)
-    return X,Y
-
 def preprocess(X,Y, bulk_norm=False, sample_ratio=None, sample_max=None,
                cast_to_onehot=True, gain=500, offset=1000, seed=None):
     """ """

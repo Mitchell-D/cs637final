@@ -1,0 +1,22 @@
+name: learn
+channels:
+- nvidia
+- conda-forge
+- nodefaults
+dependencies:
+- python>=3.10
+- botocore
+- cartopy
+- cudnn
+- curl
+- ffmpeg
+- h5py
+- imageio
+- pip
+- py-opencv
+- pyhdf
+- requests
+- s3fs
+- scikit-learn
+- scipy
+- tensorflow
