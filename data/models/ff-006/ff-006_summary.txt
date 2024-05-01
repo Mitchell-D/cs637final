@@ -1,0 +1,37 @@
+Model: "model_4"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ input (InputLayer)          [(None, 220)]             0         
+                                                                 
+ ff-006_dense_0 (Dense)      (None, 128)               28288     
+                                                                 
+ ff-006_bnorm_0 (BatchNorma  (None, 128)               512       
+ lization)                                                       
+                                                                 
+ dropout_9 (Dropout)         (None, 128)               0         
+                                                                 
+ ff-006_dense_1 (Dense)      (None, 128)               16512     
+                                                                 
+ ff-006_bnorm_1 (BatchNorma  (None, 128)               512       
+ lization)                                                       
+                                                                 
+ dropout_10 (Dropout)        (None, 128)               0         
+                                                                 
+ ff-006_dense_2 (Dense)      (None, 9)                 1161      
+                                                                 
+ ff-006_bnorm_2 (BatchNorma  (None, 9)                 36        
+ lization)                                                       
+                                                                 
+ dropout_11 (Dropout)        (None, 9)                 0         
+                                                                 
+ output (Dense)              (None, 16)                160       
+                                                                 
+ tf.nn.softmax_4 (TFOpLambd  (None, 16)                0         
+ a)                                                              
+                                                                 
+=================================================================
+Total params: 47181 (184.30 KB)
+Trainable params: 46651 (182.23 KB)
+Non-trainable params: 530 (2.07 KB)
+_________________________________________________________________

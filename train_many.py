@@ -6,6 +6,7 @@ import tensorflow as tf
 from pathlib import Path
 from scipy.io import loadmat
 from pprint import pprint
+import pickle as pkl
 
 import tracktrain.model_methods as mm
 from tracktrain.VariationalEncoderDecoder import VariationalEncoderDecoder
@@ -13,19 +14,19 @@ from tracktrain.ModelDir import ModelDir
 from tracktrain.compile_and_train import train
 
 import preprocess as pp # preprocess,gaussnorm,random_permutation,ints_to_masks
+from metadata import aviris_bands,indian_pines_labels
 
 base_config = {
         ## Meta-info
         #"model_type":"ved",
         "model_type":"ff",
-        "rand_seed":20000720,
+        "rand_seed":200007201752,
 
         ## sampling
         "drop_unknown":True,
-
-        ## Exclusive to feedforward
-        #"node_list":[64,64,32,32,16],
-        #"dense_kwargs":{"activation":"relu"},
+        ## if True, values are normalized over all features to preserve
+        ## spectral angles rather than independently.
+        "bulk_norm":False,
 
         ## Exclusive to variational encoder-decoder
         #"num_latent":8,
@@ -36,13 +37,12 @@ base_config = {
 
         ## Common to models
         "batchnorm":True,
-        #"dropout_rate":0.0,
-
+        "dropout_rate":0.0,
 
         ## Exclusive to compile_and_build_dir
         #"learning_rate":1e-5,
         "loss":"categorical_crossentropy",
-        "metrics":["categorical_crossentropy", "mae"],
+        "metrics":["categorical_crossentropy"],
         "weighted_metrics":[],
         "softmax_out":True,
 
@@ -56,67 +56,20 @@ base_config = {
         "val_frequency":1, ## epochs between validation
 
         ## Exclusive to generator init
-        #"train_val_ratio":.9,
-        #"mask_pct":0.0,
-        #"mask_pct_stdev":0.0,
-        "mask_val":999.,
-        "mask_feat_probs":None,
-        ## if True, values are normalized over all features to preserve
-        ## spectral angles rather than independently.
-        "bulk_norm":False,
-
-        "notes":"",
+        "notes":"fast learning rate, steep bottlenecks",
         }
 
-variations = {
-        "dropout_rate":(0.0,0.1,0.2,0.4),
-        "learning_rate":(1e-6,1e-4,1e-2),
-        "train_val_ratio":(.6,.8,.9),
-        "mask_pct":(0,0,0,.1,.2,.3),
-        "mask_pct_stdev":(0,0,0,.1,.2),
-
-        ## FF only
-        "node_list":(
-            (512,256,256,64,32),
-            (512,256,64,32),
-            (256,128,64,32),
-            (256,64,32),
-            (128,64,32),
-            (128,64,32,16),
-            (128,64,32,16),
-            ),
-        "dense_kwargs":(
-            {"activation":"relu"},
-            {"activation":"sigmoid"},
-            #{"activation":"tanh"},
-            ),
-
-        ## VED only
-        "num_latent":(3,4,8,12),
-        "enc_node_list":(
-            (256,64,32),
-            (512,256,64,32),
-            (256,256,256,64,64,64,32,32,32,16),
-            (128,64,64,32,32,32,16),
-            ),
-        "dec_node_list":(
-            (17,),
-            ),
-        "enc_dense_kwargs":(
-            {"activation":"relu"},
-            {"activation":"sigmoid"},
-            #{"activation":"tanh"},
-            ),
-        "dec_dense_kwargs":(
-            {"activation":"relu"},
-            {"activation":"sigmoid"},
-            #{"activation":"tanh"},
-            ),
-        }
-
-num_samples = 16
-offset = 64 ## Model numbering offset accounting for already-trained models
-model_base_name = base_config.get("model_type")+"-nounk" #"ff"
+variations = [
+        {"dropout_rate":.2,
+         "learning_rate":1e-4,
+         "bulk_norm":False,
+         "sample_ratio":.8,
+         "sample_max":512,
+         "batch_size":16,
+         "dense_kwargs":{"activation":"sigmoid"},
+         "node_list":(128,16),
+         },
+        ]
 
 if __name__=="__main__":
     model_parent_dir = Path("data/models")
@@ -125,89 +78,68 @@ if __name__=="__main__":
     ## (M,F) array of integer classes
     Y = loadmat("./data/indian-pines-truth.mat")["indian_pines_gt"]
 
+    ## Reshape to:
+    ## Y := (S,) for S labels for each sample (integers in [0,16] )
+    ## X := (S,F) for S samples and F features (radiance bands)
+    Y = np.reshape(Y, (Y.shape[0]*Y.shape[1],))
+    X = np.reshape(X, (Y.size, X.shape[-1]))
+
+    model_number_start = 16
+
+    ## Remove 'unknown' (class 0) values if requested
     if base_config.get("drop_unknown"):
         not_unknown = (Y != 0)
+        str_labels = indian_pines_labels[1:]
         Y = Y[not_unknown]
+        U = X[np.logical_not(not_unknown)]
         X = X[not_unknown]
+        ## capture unknown values
+    else:
+        str_labels = indian_pines_labels
 
-    pp.ratio_sample(Y, .6)
-    exit(0)
+    base_config["num_inputs"] = X.shape[-1]
+    base_config["num_outputs"] = np.unique(Y).size
+    for j,v in enumerate(variations):
+        ## Update the configuration for this model run
+        cur_config = {**base_config, **v}
+        model_gen = model_number_start+j
+        cur_config["model_name"] = f"{cur_config['model_type']}-{model_gen:03}"
 
-    ## Construct a coordinate array of equally-spaced wavelengths
-    wl_min,wl_max = (.4, 2.5) ## define wavelength range
-    wls = np.linspace(.4,2.5,X.shape[-1])
+        ## preprocess the data into tensorflow training and validation datasets
+        T,V,norm= pp.preprocess(
+                X=X,
+                Y=Y,
+                bulk_norm=cur_config["bulk_norm"],
+                sample_ratio=cur_config["sample_ratio"],
+                sample_max=cur_config["sample_max"],
+                )
 
-    ## Reshape and rescale the feature data, and one-hot encode the labels
-    grid_shape = X.shape[:2]
-    X,Y = pp.preprocess(X, Y, gain=500, offset=1000, cast_to_onehot=True)
-    IDX = np.arange(X.shape[0])
-    X,means,stdevs = pp.gaussnorm(
-            X=(X_nonorm:=X),
-            bulk_norm=base_config.get("bulk_norm"),
+        ## indeces refer to the pixel's location in the flattened spatial dims
+        TX,TY,TIDX = T
+        VX,VY,VIDX = V
+        means,stdevs = norm
+
+        ## convert to tensorflow dataset
+        data_train = tf.data.Dataset.from_tensor_slices((TX,TY))
+        data_val = tf.data.Dataset.from_tensor_slices((VX,VY))
+
+        ## Initialize the model and its directory
+        model,md = ModelDir.build_from_config(
+                config=cur_config,
+                model_parent_dir=model_parent_dir,
+                print_summary=True,
+                )
+
+        ## train the model and add the results to its directory
+        best_model = train(
+            model_dir_path=md.dir,
+            train_config=cur_config,
+            compiled_model=model,
+            gen_training=data_train,
+            gen_validation=data_val,
             )
 
-    ## Get integer arrays encoding a seeded random permutation and its inverse
-    forward,backward = pp.random_permutation(
-            X.shape[0], seed=base_config.get("rand_seed"))
-    X,Y,IDX = X[forward],Y[forward],IDX[forward]
-
-    ## Exclude 35% of the data for testing from the front of the shuffled array
-    train_split_idx = int(.35*X.shape[0])
-    X_test,X_train_and_val = np.split(X, [train_split_idx], axis=0)
-    Y_test,Y_train_and_val = np.split(Y, [train_split_idx], axis=0)
-    IDX_test,IDX_train_and_val = np.split(IDX, [train_split_idx], axis=0)
-
-    base_config["num_inputs"] = X_test.shape[-1]
-    base_config["num_outputs"] = Y_test.shape[-1]
-
-    ## Dispatch training loops
-    comb_failed = []
-    comb_trained = []
-    vlabels,vdata = zip(*variations.items())
-    vdata = tuple(map(tuple, vdata))
-    comb_shape = tuple(len(v) for v in vdata)
-    comb_count = np.prod(np.array(comb_shape))
-    for i in range(num_samples):
-        ## Get a random argument combination from the configuration
-        cur_comb = tuple(np.random.randint(0,j) for j in comb_shape)
-        cur_update = {
-                vlabels[i]:vdata[i][cur_comb[i]]
-                for i in range(len(vlabels))
-                }
-        cur_update["model_name"] = model_base_name+f"-{i+offset:03}"
-        ## Construct the config for this model training run
-        cur_config = {**base_config, **cur_update}
-        pprint(cur_config)
-        try:
-            ## Initialize the masking data generators
-            gen_train,gen_val = mm.array_to_noisy_tv_gen(
-                    X=X_train_and_val.astype(np.float64),
-                    Y=Y_train_and_val.astype(np.float64),
-                    tv_ratio=cur_config.get("train_val_ratio"),
-                    noise_pct=cur_config.get("mask_pct"),
-                    noise_stdev=cur_config.get("mask_pct_stdev"),
-                    mask_val=cur_config.get("mask_val"),
-                    feat_probs=cur_config.get("mask_feat_probs"),
-                    shuffle=True,
-                    dtype=tf.float64,
-                    rand_seed=cur_config.get("random_seed"),
-                    )
-            ## Initialize the model and its directory
-            model,md = ModelDir.build_from_config(
-                    config=cur_config,
-                    model_parent_dir=model_parent_dir,
-                    print_summary=False,
-                    )
-            ## train the model and add the results to its directory
-            best_model = train(
-                model_dir_path=md.dir,
-                train_config=cur_config,
-                compiled_model=model,
-                gen_training=gen_train,
-                gen_validation=gen_val,
-                )
-        except Exception as e:
-            print(f"FAILED update combination {cur_update}")
-            print(traceback.format_exc())
-            comb_failed.append(cur_comb)
-        comb_trained.append(cur_comb)
+        ## Dump the data from this preprocessing run, since the dataset
+        ## used varies between sampling configurations.
+        pkl.dump((T,V,norm),md.dir.joinpath(
+            f"{md.dir.name}_dataset.pkl").open("wb"))

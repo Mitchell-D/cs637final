@@ -1,0 +1,30 @@
+Model: "model_2"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ input (InputLayer)          [(None, 220)]             0         
+                                                                 
+ ff-014_dense_0 (Dense)      (None, 12)                2652      
+                                                                 
+ ff-014_bnorm_0 (BatchNorma  (None, 12)                48        
+ lization)                                                       
+                                                                 
+ dropout_4 (Dropout)         (None, 12)                0         
+                                                                 
+ ff-014_dense_1 (Dense)      (None, 128)               1664      
+                                                                 
+ ff-014_bnorm_1 (BatchNorma  (None, 128)               512       
+ lization)                                                       
+                                                                 
+ dropout_5 (Dropout)         (None, 128)               0         
+                                                                 
+ output (Dense)              (None, 16)                2064      
+                                                                 
+ tf.nn.softmax_2 (TFOpLambd  (None, 16)                0         
+ a)                                                              
+                                                                 
+=================================================================
+Total params: 6940 (27.11 KB)
+Trainable params: 6660 (26.02 KB)
+Non-trainable params: 280 (1.09 KB)
+_________________________________________________________________

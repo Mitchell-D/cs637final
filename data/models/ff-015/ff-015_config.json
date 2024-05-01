@@ -1,0 +1,36 @@
+{
+    "model_type": "ff",
+    "rand_seed": 200007201752,
+    "drop_unknown": true,
+    "bulk_norm": false,
+    "batchnorm": true,
+    "dropout_rate": 0.2,
+    "loss": "categorical_crossentropy",
+    "metrics": [
+        "categorical_crossentropy"
+    ],
+    "weighted_metrics": [],
+    "softmax_out": true,
+    "early_stop_metric": "val_loss",
+    "early_stop_patience": 64,
+    "save_weights_only": true,
+    "batch_size": 16,
+    "batch_buffer": 1,
+    "max_epochs": 512,
+    "val_frequency": 1,
+    "notes": "fast learning rate, steep bottlenecks",
+    "num_inputs": 220,
+    "num_outputs": 16,
+    "learning_rate": 0.0001,
+    "sample_ratio": 0.8,
+    "sample_max": 512,
+    "dense_kwargs": {
+        "activation": "sigmoid"
+    },
+    "node_list": [
+        128,
+        12
+    ],
+    "nodes": "same as ff-11 but bulk norm",
+    "model_name": "ff-015"
+}

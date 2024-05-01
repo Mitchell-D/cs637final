@@ -8,28 +8,10 @@ from scipy.io import loadmat
 #import tracktrain
 from preprocess import preprocess,gaussnorm,random_permutation
 from krttdkit.visualize import guitools as gt
+from metadata import default_labels_colors
+
 
 #plt.rcParams.update({'font.size':16, })
-
-default_labels_colors = [
-    ("Unknown", "black"),
-    ("Alfalfa", "xkcd:greenish blue"),
-    ("Corn-notill", "xkcd:light pink"),
-    ("Corn-mintill", "xkcd:light purple"),
-    ("Corn", "xkcd:violet"),
-    ("Grass-pasture", "xkcd:grass green"),
-    ("Grass-trees", "xkcd:leaf green"),
-    ("Grass-pasture-mowed", "xkcd:light green"),
-    ("Hay-windrowed", "xkcd:purple blue"),
-    ("Oats", "xkcd:medium blue"),
-    ("Soybean-notill", "xkcd:rose pink"),
-    ("Soybean-mintill", "xkcd:orange red"),
-    ("Soybean-clean", "xkcd:deep red"),
-    ("Wheat", "xkcd:tangerine"),
-    ("Woods", "xkcd:forest green"),
-    ("Buildings-Grass-Trees-Drives", "slategrey"),
-    ("Stone-Steel-Towers", "white"),
-    ]
 
 seed = 200007221752
 rng = np.random.default_rng(seed=seed)

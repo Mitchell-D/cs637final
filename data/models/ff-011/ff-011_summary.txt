@@ -1,0 +1,44 @@
+Model: "model_2"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ input (InputLayer)          [(None, 220)]             0         
+                                                                 
+ ff-011_dense_0 (Dense)      (None, 128)               28288     
+                                                                 
+ ff-011_bnorm_0 (BatchNorma  (None, 128)               512       
+ lization)                                                       
+                                                                 
+ dropout_4 (Dropout)         (None, 128)               0         
+                                                                 
+ ff-011_dense_1 (Dense)      (None, 128)               16512     
+                                                                 
+ ff-011_bnorm_1 (BatchNorma  (None, 128)               512       
+ lization)                                                       
+                                                                 
+ dropout_5 (Dropout)         (None, 128)               0         
+                                                                 
+ ff-011_dense_2 (Dense)      (None, 128)               16512     
+                                                                 
+ ff-011_bnorm_2 (BatchNorma  (None, 128)               512       
+ lization)                                                       
+                                                                 
+ dropout_6 (Dropout)         (None, 128)               0         
+                                                                 
+ ff-011_dense_3 (Dense)      (None, 128)               16512     
+                                                                 
+ ff-011_bnorm_3 (BatchNorma  (None, 128)               512       
+ lization)                                                       
+                                                                 
+ dropout_7 (Dropout)         (None, 128)               0         
+                                                                 
+ output (Dense)              (None, 16)                2064      
+                                                                 
+ tf.nn.softmax_2 (TFOpLambd  (None, 16)                0         
+ a)                                                              
+                                                                 
+=================================================================
+Total params: 81936 (320.06 KB)
+Trainable params: 80912 (316.06 KB)
+Non-trainable params: 1024 (4.00 KB)
+_________________________________________________________________

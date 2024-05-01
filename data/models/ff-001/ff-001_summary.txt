@@ -1,0 +1,50 @@
+Model: "model"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ input (InputLayer)          [(None, 220)]             0         
+                                                                 
+ ff-001_dense_0 (Dense)      (None, 256)               56576     
+                                                                 
+ ff-001_bnorm_0 (BatchNorma  (None, 256)               1024      
+ lization)                                                       
+                                                                 
+ dropout (Dropout)           (None, 256)               0         
+                                                                 
+ ff-001_dense_1 (Dense)      (None, 64)                16448     
+                                                                 
+ ff-001_bnorm_1 (BatchNorma  (None, 64)                256       
+ lization)                                                       
+                                                                 
+ dropout_1 (Dropout)         (None, 64)                0         
+                                                                 
+ ff-001_dense_2 (Dense)      (None, 64)                4160      
+                                                                 
+ ff-001_bnorm_2 (BatchNorma  (None, 64)                256       
+ lization)                                                       
+                                                                 
+ dropout_2 (Dropout)         (None, 64)                0         
+                                                                 
+ ff-001_dense_3 (Dense)      (None, 64)                4160      
+                                                                 
+ ff-001_bnorm_3 (BatchNorma  (None, 64)                256       
+ lization)                                                       
+                                                                 
+ dropout_3 (Dropout)         (None, 64)                0         
+                                                                 
+ ff-001_dense_4 (Dense)      (None, 12)                780       
+                                                                 
+ ff-001_bnorm_4 (BatchNorma  (None, 12)                48        
+ lization)                                                       
+                                                                 
+ dropout_4 (Dropout)         (None, 12)                0         
+                                                                 
+ output (Dense)              (None, 16)                208       
+                                                                 
+ tf.nn.softmax (TFOpLambda)  (None, 16)                0         
+                                                                 
+=================================================================
+Total params: 84172 (328.80 KB)
+Trainable params: 83252 (325.20 KB)
+Non-trainable params: 920 (3.59 KB)
+_________________________________________________________________
