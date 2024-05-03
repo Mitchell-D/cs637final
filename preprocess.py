@@ -7,6 +7,9 @@ def preprocess(X,Y, bulk_norm=False, sample_ratio=None, sample_max=None,
     unique_labels = np.unique(Y)
     ## conversion to spectral radiance (W * cm^-2 * nm^-1 * sr^-1) from docs
     X = (X-offset)/gain
+    if len(X.shape)==3 and len(Y.shape)==2:
+        X = np.reshape(X, (X.shape[0]*X.shape[1],-1))
+        Y = np.reshape(Y, (Y.shape[0]*Y.shape[1]))
 
     ## Normalize to mean 0 and stdev 1. if bulk_norm is True in the config,
     ## the whole array will be normalized by a single linear equation rather
@@ -41,6 +44,7 @@ def preprocess(X,Y, bulk_norm=False, sample_ratio=None, sample_max=None,
                 )
     ## If neither sample constraints provided, just return the whole dataset.
     if all(c is None for c in (sample_ratio,sample_max)):
+        print(X.shape)
         if cast_to_onehot:
             Y = np.stack([np.where(Y==s,1,0) for s in unique_labels], axis=-1)
         return (X[backward],Y[backward],IDX[backward]),(means,stdevs)
@@ -76,9 +80,6 @@ def preprocess(X,Y, bulk_norm=False, sample_ratio=None, sample_max=None,
         TY = np.stack([np.where(TY==s, 1, 0) for s in unique_labels], axis=-1)
         VY = np.stack([np.where(VY==s, 1, 0) for s in unique_labels], axis=-1)
 
-    #print(Y.shape, X.shape, IDX.shape)
-    #print(TY.shape, TX.shape, TIDX.shape)
-    #print(VY.shape, VX.shape, VIDX.shape)
     return (TX,TY,TIDX),(VX,VY,VIDX),(means,stdevs)
 
 def random_permutation(size, seed=None):
@@ -118,19 +119,7 @@ def ratio_sample(label_ints:np.array, ratio, sample_max=None, seed=None):
         out_masks[i,idxs[ratio_counts[i]:]] = True
     return in_masks,out_masks
 
-def uniform_sample(label_ints:np.array, nsamples=None, seed=None):
-    """
-    Given an array of integers identifying class labels, return
-
-    :@param label_ints: Numpy array of integer labels
-    :@param nsamples: Maximum number of samples to draw from each category.
-        If any classes have fewer samples available than the provided amount,
-        the included mask will include all of them.
-    """
-    rng = np.random.default_rng(seed=seed)
-    print(label_ints.shape, nsamples)
-
-def gaussnorm(X, bulk_norm=False, stdev_cutoff=10):
+def gaussnorm(X, bulk_norm=False, stdev_cutoff=10, keepdims=False):
     """
     Normalize the array to a unit gaussian distribution, by default per feature
     on the final axis, but optionally normalized over the whole array
@@ -140,8 +129,8 @@ def gaussnorm(X, bulk_norm=False, stdev_cutoff=10):
         standard deviation rather than per final axis element.
     """
     ax = [0,None][bulk_norm]
-    means = np.average(X, axis=ax)
-    stdevs = np.std(X, axis=ax)
+    means = np.average(X, axis=ax, keepdims=keepdims)
+    stdevs = np.std(X, axis=ax, keepdims=keepdims)
     Xnorm = (X-means)/stdevs
     np.clip(Xnorm, -stdev_cutoff, stdev_cutoff)
     return Xnorm,means,stdevs

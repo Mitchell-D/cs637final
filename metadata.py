@@ -16,11 +16,11 @@ indian_pines_labels = (
     "Soybean-clean",
     "Wheat",
     "Woods",
-    "Buildings-Grass-Trees-Drives",
+    "Buildings-Grass-Drives",
     "Stone-Steel-Towers",
     )
 
-aviris_bands = [
+aviris_wavelengths = [
     400.02, 409.82, 419.62, 429.43, 439.25, 449.07, 458.90,
     468.73, 478.57, 488.41, 498.26, 508.12, 517.98, 527.85,
     537.72, 547.60, 557.49, 567.38, 577.28, 587.18, 597.09,
@@ -71,6 +71,6 @@ default_labels_colors = [
     ("Soybean-clean", "xkcd:deep red"),
     ("Wheat", "xkcd:tangerine"),
     ("Woods", "xkcd:forest green"),
-    ("Buildings-Grass-Trees-Drives", "slategrey"),
+    ("Buildings-Grass-Drives", "slategrey"),
     ("Stone-Steel-Towers", "white"),
     ]

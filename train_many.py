@@ -56,7 +56,7 @@ base_config = {
         "val_frequency":1, ## epochs between validation
 
         ## Exclusive to generator init
-        "notes":"fast learning rate, steep bottlenecks",
+        #"notes":"fast learning rate, steep bottlenecks",
         }
 
 variations = [
@@ -64,10 +64,62 @@ variations = [
          "learning_rate":1e-4,
          "bulk_norm":False,
          "sample_ratio":.8,
+         "sample_max":128,
+         "batch_size":16,
+         "dense_kwargs":{"activation":"sigmoid"},
+         "node_list":(64,32),
+         "notes":"Max 128 samples per class",
+         },
+        {"dropout_rate":.2,
+         "learning_rate":1e-4,
+         "bulk_norm":False,
+         "sample_ratio":.8,
          "sample_max":512,
          "batch_size":16,
          "dense_kwargs":{"activation":"sigmoid"},
-         "node_list":(128,16),
+         "node_list":(64,32),
+         "notes":"Max 512 samples per class",
+         },
+        {"dropout_rate":.2,
+         "learning_rate":1e-4,
+         "bulk_norm":False,
+         "sample_ratio":.8,
+         "sample_max":1024,
+         "batch_size":16,
+         "dense_kwargs":{"activation":"sigmoid"},
+         "node_list":(64,32),
+         "notes":"Max 1024 samples per class",
+         },
+
+        {"dropout_rate":.2,
+         "learning_rate":1e-3,
+         "bulk_norm":False,
+         "sample_ratio":.8,
+         "sample_max":512,
+         "batch_size":16,
+         "dense_kwargs":{"activation":"sigmoid"},
+         "node_list":(64,32),
+         "notes":"Fast learning rate",
+         },
+        {"dropout_rate":.2,
+         "learning_rate":1e-4,
+         "bulk_norm":False,
+         "sample_ratio":.8,
+         "sample_max":512,
+         "batch_size":16,
+         "dense_kwargs":{"activation":"sigmoid"},
+         "node_list":(64,32),
+         "notes":"Moderate learning rate",
+         },
+        {"dropout_rate":.2,
+         "learning_rate":1e-5,
+         "bulk_norm":False,
+         "sample_ratio":.8,
+         "sample_max":512,
+         "batch_size":16,
+         "dense_kwargs":{"activation":"sigmoid"},
+         "node_list":(64,32),
+         "notes":"Slow learning rate",
          },
         ]
 
@@ -83,15 +135,20 @@ if __name__=="__main__":
     ## X := (S,F) for S samples and F features (radiance bands)
     Y = np.reshape(Y, (Y.shape[0]*Y.shape[1],))
     X = np.reshape(X, (Y.size, X.shape[-1]))
+    IDX = np.arange(Y.size)
 
-    model_number_start = 16
+    model_number_start = 17
+
+    not_unknown = (Y != 0)
+    U = X[np.logical_not(not_unknown)]
+    ## unknown and known class indeces
+    KIDX = IDX[not_unknown]
+    UIDX = IDX[np.logical_not(not_unknown)]
 
     ## Remove 'unknown' (class 0) values if requested
     if base_config.get("drop_unknown"):
-        not_unknown = (Y != 0)
         str_labels = indian_pines_labels[1:]
         Y = Y[not_unknown]
-        U = X[np.logical_not(not_unknown)]
         X = X[not_unknown]
         ## capture unknown values
     else:
@@ -106,7 +163,7 @@ if __name__=="__main__":
         cur_config["model_name"] = f"{cur_config['model_type']}-{model_gen:03}"
 
         ## preprocess the data into tensorflow training and validation datasets
-        T,V,norm= pp.preprocess(
+        T,V,norm = pp.preprocess(
                 X=X,
                 Y=Y,
                 bulk_norm=cur_config["bulk_norm"],
@@ -115,9 +172,15 @@ if __name__=="__main__":
                 )
 
         ## indeces refer to the pixel's location in the flattened spatial dims
+        ##
         TX,TY,TIDX = T
         VX,VY,VIDX = V
+        if base_config.get("drop_unknown"):
+            TIDX = KIDX[TIDX]
+            VIDX = KIDX[VIDX]
         means,stdevs = norm
+
+        print(TIDX.shape, VIDX.shape, TX.shape, TY.shape, VX.shape, VY.shape)
 
         ## convert to tensorflow dataset
         data_train = tf.data.Dataset.from_tensor_slices((TX,TY))
@@ -141,5 +204,5 @@ if __name__=="__main__":
 
         ## Dump the data from this preprocessing run, since the dataset
         ## used varies between sampling configurations.
-        pkl.dump((T,V,norm),md.dir.joinpath(
+        pkl.dump(((TX,TY,TIDX), (VX,VY,VIDX), norm),md.dir.joinpath(
             f"{md.dir.name}_dataset.pkl").open("wb"))

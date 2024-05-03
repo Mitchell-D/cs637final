@@ -8,7 +8,7 @@ from scipy.io import loadmat
 #import tracktrain
 from preprocess import preprocess,gaussnorm,random_permutation
 from krttdkit.visualize import guitools as gt
-from metadata import default_labels_colors
+from metadata import default_labels_colors,aviris_wavelengths
 
 
 #plt.rcParams.update({'font.size':16, })
@@ -66,7 +66,8 @@ def plot_class_spectra(
         to shade a region surrounding the class trend.
     """
     fig,ax = plt.subplots()
-    assert len(class_intensities) == len(labels)
+    assert len(class_intensities) == len(labels), \
+            f"{len(class_intensities)} != {len(labels)}"
     if not colors:
         colors = [None for i in range(len(labels))]
     for i in range(class_intensities.shape[0]):
@@ -80,7 +81,7 @@ def plot_class_spectra(
                     color=colors[i],
                     alpha=.15
                     )
-    ax.set_title("Gauss-normalized spectral intensity with 1-sigma error bars")
+    ax.set_title("Spectral intensity with 1-sigma error bars")
     ax.set_xlabel("Wavelength (um)")
     ax.set_ylabel("Intensity")
     ax.legend(prop={'size':8}, ncol=2)
@@ -144,8 +145,12 @@ if __name__=="__main__":
     ## Plot the spatial distribution of truth labels
     plot_classes(Y, class_labels, colors, show=True)
 
+    print(X.shape)
     ## Preprocess (unroll and scale) and gauss-normalize the data
-    X,Y = preprocess(X, Y, gain=500, offset=1000, cast_to_onehot=False)
+    (X,Y,IDX),norm = preprocess(X, Y, gain=500, offset=1000,
+                                bulk_norm=bulk_norm)
+    Y = np.argmax(Y, axis=-1)
+    print(X.shape)
 
     ## Make boolean masks for each class and use them to reference pixel groups
     int_labels,masks = ints_to_masks(Y)
@@ -155,6 +160,7 @@ if __name__=="__main__":
             (np.average(c, axis=0), np.std(c, axis=0))
             for c in classes
             ]))
+
     ## Plot the spectral means/stdevs of all of the classes together
     plot_class_spectra(
             wavelengths=wls,
@@ -165,8 +171,11 @@ if __name__=="__main__":
             show=True,
             )
 
-    X_norm,means,stdevs = gaussnorm(X, bulk_norm=bulk_norm)
+    X_norm,means,stdevs = gaussnorm(X, bulk_norm=bulk_norm, keepdims=False)
     ## Plot feature-wise reflectance if bulk normalization wasn't used.
+    print(X_norm.shape, means.shape, stdevs.shape)
+
+    #'''
     if means.size>1:
         fig,ax = plot_sample(wls, means, err=stdevs, show=True)
     classes_normed = [X_norm[masks[...,i]] for i in range(masks.shape[-1])]
@@ -184,8 +193,7 @@ if __name__=="__main__":
             class_err=class_stdevs_normed,
             show=True,
             )
-
-    exit(0)
+    #'''
 
     for i in range(10):
         plot_sample(
